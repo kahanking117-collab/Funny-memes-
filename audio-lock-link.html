@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Audio Lock Link</title>
+  <style>
+    html,body{height:100%;margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .overlay{
+      position:fixed;inset:0;background:#000b;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;
+    }
+    .big{
+      font-size:2rem;margin:8px;text-align:center;
+    }
+    .count{font-size:3rem;margin:6px}
+    button{padding:12px 18px;font-size:1rem;border-radius:8px;border:0;background:rgba(255,255,255,0.12);color:#fff}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <audio id="player" src="sound-a-woman-enjoys-coitus.mp3" preload="auto"></audio>
+
+  <div id="overlay" class="overlay">
+    <div class="big">Audio will play and screen will be blocked for</div>
+    <div id="timer" class="count">02:00</div>
+    <div class="big">(If audio doesn't start automatically, tap the button below)</div>
+    <div style="margin-top:16px">
+      <button id="startBtn">Tap to start audio</button>
+    </div>
+  </div>
+
+  <script>
+    const DURATION_MS = 2 * 60 * 1000; // 2 minutes
+    const player = document.getElementById('player');
+    const overlay = document.getElementById('overlay');
+    const timerEl = document.getElementById('timer');
+    const startBtn = document.getElementById('startBtn');
+
+    function formatTime(ms){
+      const s = Math.ceil(ms/1000);
+      const mm = Math.floor(s/60).toString().padStart(2,'0');
+      const ss = (s%60).toString().padStart(2,'0');
+      return `${mm}:${ss}`;
+    }
+
+    let endTime = null;
+    let tickInterval = null;
+
+    function startSequence(){
+      player.play().catch(()=>{});
+      endTime = Date.now() + DURATION_MS;
+      timerEl.textContent = formatTime(DURATION_MS);
+      tickInterval = setInterval(()=>{
+        const remaining = endTime - Date.now();
+        if(remaining <= 0){
+          clearInterval(tickInterval);
+          finishSequence();
+        } else {
+          timerEl.textContent = formatTime(remaining);
+        }
+      }, 250);
+      startBtn.classList.add('hidden');
+    }
+
+    function finishSequence(){
+      try{ player.pause(); player.currentTime = 0; }catch(e){}
+      overlay.classList.add('hidden');
+    }
+
+    window.addEventListener('load', ()=>{
+      const p = player.play();
+      if(p && p.then){
+        p.then(()=>{ startSequence(); }).catch(()=>{ });
+      }
+    });
+
+    startBtn.addEventListener('click', async ()=>{
+      try{ await player.play(); } catch(e){}
+      startSequence();
+    });
+  </script>
+</body>
+</html>
